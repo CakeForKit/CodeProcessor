@@ -1,0 +1,69 @@
+basePath: /
+host: localhost:8000
+info:
+  contact: {}
+  description: API для обработки кода
+  title: Code Processor API
+  version: "1.0"
+paths:
+  /result/{task_id}:
+    get:
+      description: Возвращает результат выполнения задачи. Если задача ещё не выполнена,
+        возвращает ошибку.
+      parameters:
+      - description: UUID идентификатор задачи
+        format: uuid
+        in: path
+        name: task_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешное получение результата
+        "400":
+          description: Неверный формат UUID или задача не готова
+        "404":
+          description: Задача не найдена
+      summary: Получение результата задачи
+      tags:
+      - Задачи
+  /status/{task_id}:
+    get:
+      description: Возвращает текущий статус задачи по её идентификатору
+      parameters:
+      - description: UUID идентификатор задачи
+        format: uuid
+        in: path
+        name: task_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешное получение статуса
+        "400":
+          description: Неверный формат UUID
+        "404":
+          description: Задача не найдена
+      summary: Получение статуса таски.
+      tags:
+      - Задачи
+  /task:
+    post:
+      consumes:
+      - application/json
+      description: Загрузка таски на обработку, генерация uuid64 и выдача его пользователю.
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Задача успешно создана
+        "400":
+          description: Неверный запрос - ошибка валидации
+      summary: Загрузка таски на обработку
+      tags:
+      - Задачи
+swagger: "2.0"

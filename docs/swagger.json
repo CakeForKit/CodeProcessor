@@ -1,0 +1,102 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API для обработки кода",
+        "title": "Code Processor API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8000",
+    "basePath": "/",
+    "paths": {
+        "/result/{task_id}": {
+            "get": {
+                "description": "Возвращает результат выполнения задачи. Если задача ещё не выполнена, возвращает ошибку.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Задачи"
+                ],
+                "summary": "Получение результата задачи",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "UUID идентификатор задачи",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное получение результата"
+                    },
+                    "400": {
+                        "description": "Неверный формат UUID или задача не готова"
+                    },
+                    "404": {
+                        "description": "Задача не найдена"
+                    }
+                }
+            }
+        },
+        "/status/{task_id}": {
+            "get": {
+                "description": "Возвращает текущий статус задачи по её идентификатору",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Задачи"
+                ],
+                "summary": "Получение статуса таски.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "UUID идентификатор задачи",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное получение статуса"
+                    },
+                    "400": {
+                        "description": "Неверный формат UUID"
+                    },
+                    "404": {
+                        "description": "Задача не найдена"
+                    }
+                }
+            }
+        },
+        "/task": {
+            "post": {
+                "description": "Загрузка таски на обработку, генерация uuid64 и выдача его пользователю.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Задачи"
+                ],
+                "summary": "Загрузка таски на обработку",
+                "responses": {
+                    "201": {
+                        "description": "Задача успешно создана"
+                    },
+                    "400": {
+                        "description": "Неверный запрос - ошибка валидации"
+                    }
+                }
+            }
+        }
+    }
+}

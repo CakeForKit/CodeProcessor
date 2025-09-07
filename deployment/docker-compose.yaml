@@ -1,0 +1,14 @@
+services:
+  code_processor_app:
+    container_name: code_processor_app
+    build:
+      context: ../
+      dockerfile: ./cmd/app/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - GIN_MODE=debug  
+    # volumes:
+    #   - ./docs:/app/docs  
+    # depends_on:
+
