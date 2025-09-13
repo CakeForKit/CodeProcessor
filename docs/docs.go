@@ -15,8 +15,96 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/login": {
+            "post": {
+                "description": "Аутентификация пользователя и получение токена",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Аутентификация"
+                ],
+                "summary": "Вход пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные для входа",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/jsonrep.UserAuth"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешный вход",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос - ошибка валидации"
+                    },
+                    "401": {
+                        "description": "Неавторизованный доступ - неверный токен или credentials"
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера"
+                    }
+                }
+            }
+        },
+        "/register": {
+            "post": {
+                "description": "Создание нового пользователя в системе",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Аутентификация"
+                ],
+                "summary": "Регистрация пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные для регистрации",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/jsonrep.UserAuth"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Пользователь успешно зарегистрирован"
+                    },
+                    "400": {
+                        "description": "Неверный запрос - ошибка валидации"
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера"
+                    }
+                }
+            }
+        },
         "/result/{task_id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Возвращает результат выполнения задачи. Если задача ещё не выполнена, возвращает ошибку.",
                 "produces": [
                     "application/json"
@@ -26,6 +114,13 @@ const docTemplate = `{
                 ],
                 "summary": "Получение результата задачи",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer токен сессии",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "format": "uuid",
@@ -50,6 +145,11 @@ const docTemplate = `{
         },
         "/status/{task_id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Возвращает текущий статус задачи по её идентификатору",
                 "produces": [
                     "application/json"
@@ -59,6 +159,13 @@ const docTemplate = `{
                 ],
                 "summary": "Получение статуса таски.",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer токен сессии",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "format": "uuid",
@@ -83,6 +190,11 @@ const docTemplate = `{
         },
         "/task": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Загрузка таски на обработку, генерация uuid64 и выдача его пользователю.",
                 "consumes": [
                     "application/json"
@@ -94,6 +206,15 @@ const docTemplate = `{
                     "Задачи"
                 ],
                 "summary": "Загрузка таски на обработку",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer токен сессии",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "201": {
                         "description": "Задача успешно создана"
@@ -101,6 +222,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Неверный запрос - ошибка валидации"
                     }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "jsonrep.UserAuth": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         }

@@ -1,4 +1,12 @@
 basePath: /
+definitions:
+  jsonrep.UserAuth:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
 host: localhost:8000
 info:
   contact: {}
@@ -6,11 +14,70 @@ info:
   title: Code Processor API
   version: "1.0"
 paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Аутентификация пользователя и получение токена
+      parameters:
+      - description: Данные для входа
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/jsonrep.UserAuth'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешный вход
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Неверный запрос - ошибка валидации
+        "401":
+          description: Неавторизованный доступ - неверный токен или credentials
+        "500":
+          description: Внутренняя ошибка сервера
+      summary: Вход пользователя
+      tags:
+      - Аутентификация
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Создание нового пользователя в системе
+      parameters:
+      - description: Данные для регистрации
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/jsonrep.UserAuth'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Пользователь успешно зарегистрирован
+        "400":
+          description: Неверный запрос - ошибка валидации
+        "500":
+          description: Внутренняя ошибка сервера
+      summary: Регистрация пользователя
+      tags:
+      - Аутентификация
   /result/{task_id}:
     get:
       description: Возвращает результат выполнения задачи. Если задача ещё не выполнена,
         возвращает ошибку.
       parameters:
+      - description: Bearer токен сессии
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: UUID идентификатор задачи
         format: uuid
         in: path
@@ -26,6 +93,8 @@ paths:
           description: Неверный формат UUID или задача не готова
         "404":
           description: Задача не найдена
+      security:
+      - ApiKeyAuth: []
       summary: Получение результата задачи
       tags:
       - Задачи
@@ -33,6 +102,11 @@ paths:
     get:
       description: Возвращает текущий статус задачи по её идентификатору
       parameters:
+      - description: Bearer токен сессии
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: UUID идентификатор задачи
         format: uuid
         in: path
@@ -48,6 +122,8 @@ paths:
           description: Неверный формат UUID
         "404":
           description: Задача не найдена
+      security:
+      - ApiKeyAuth: []
       summary: Получение статуса таски.
       tags:
       - Задачи
@@ -56,6 +132,12 @@ paths:
       consumes:
       - application/json
       description: Загрузка таски на обработку, генерация uuid64 и выдача его пользователю.
+      parameters:
+      - description: Bearer токен сессии
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -63,6 +145,8 @@ paths:
           description: Задача успешно создана
         "400":
           description: Неверный запрос - ошибка валидации
+      security:
+      - ApiKeyAuth: []
       summary: Загрузка таски на обработку
       tags:
       - Задачи

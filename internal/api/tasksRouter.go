@@ -31,6 +31,8 @@ func NewTasksRouter(router *gin.RouterGroup, taskServ services.TaskServ) TasksRo
 // @Tags Задачи
 // @Accept json
 // @Produce json
+// @Security ApiKeyAuth
+// @Param Authorization header string true "Bearer токен сессии"
 // // @Param request body jsonrep.TaskAdd true "Данные задачи"
 // @Success 201 "Задача успешно создана"
 // @Failure 400 "Неверный запрос - ошибка валидации"
@@ -60,6 +62,8 @@ func (r *TasksRouter) UploadTask(c *gin.Context) {
 // @Description Возвращает текущий статус задачи по её идентификатору
 // @Tags Задачи
 // @Produce json
+// @Security ApiKeyAuth
+// @Param Authorization header string true "Bearer токен сессии"
 // @Param task_id path string true "UUID идентификатор задачи" Format(uuid)
 // @Success 200 "Успешное получение статуса"
 // @Failure 400 "Неверный формат UUID"
@@ -89,6 +93,8 @@ func (r *TasksRouter) GetTaskStatus(c *gin.Context) {
 // @Description Возвращает результат выполнения задачи. Если задача ещё не выполнена, возвращает ошибку.
 // @Tags Задачи
 // @Produce json
+// @Security ApiKeyAuth
+// @Param Authorization header string true "Bearer токен сессии"
 // @Param task_id path string true "UUID идентификатор задачи" Format(uuid)
 // @Success 200 "Успешное получение результата"
 // @Failure 400 "Неверный формат UUID или задача не готова"

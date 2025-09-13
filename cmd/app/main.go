@@ -8,7 +8,10 @@ package main
 import (
 	"codeProcessor/internal/api"
 	"codeProcessor/internal/cnfg"
+	"codeProcessor/internal/middleware"
 	"codeProcessor/internal/services"
+	"codeProcessor/internal/services/auth"
+	"codeProcessor/internal/services/hasher"
 	"codeProcessor/internal/storage"
 	"fmt"
 
@@ -20,22 +23,9 @@ import (
 )
 
 func main() {
-	// ctx := context.Background()
 	engine := gin.New()
 	engine.Use(gin.Logger())
 	engine.Use(gin.Recovery())
-	// // Настройка CORS
-	// engine.Use(cors.New(cors.Config{
-	// 	AllowOrigins:     []string{"*"}, // Можно указать конкретные домены вместо "*"
-	// 	AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
-	// 	AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
-	// 	ExposeHeaders:    []string{"Content-Length", "Content-Type"},
-	// 	AllowCredentials: true,
-	// 	MaxAge:           12 * time.Hour,
-	// }))
-	// engine.OPTIONS("/*any", func(c *gin.Context) {
-	// 	c.AbortWithStatus(http.StatusNoContent)
-	// })
 
 	// Config
 	appCnfg, err := cnfg.LoadAppConfig("./configs/", "app", "yaml")
@@ -46,7 +36,7 @@ func main() {
 	url := ginSwagger.URL(fmt.Sprintf("http://localhost:%d/swagger/doc.json", appCnfg.Port))
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
-	apiGroup := engine.Group("/")
+	storage.RegisterAllSessionStorages()
 
 	taskStorage, err := storage.NewTaskStorage()
 	if err != nil {
@@ -57,7 +47,28 @@ func main() {
 		panic(fmt.Errorf("NewTaskServ: %v", err))
 	}
 
-	tasksRouter := api.NewTasksRouter(apiGroup, taskServ)
+	sessionStorage := storage.SessionStorages["mem"]
+	hashServ, err := hasher.NewHasher()
+	if err != nil {
+		panic(fmt.Errorf("NewHasher: %v", err))
+	}
+	userStorage, err := storage.NewUserStorage()
+	if err != nil {
+		panic(fmt.Errorf("NewUserStorage: %v", err))
+	}
+	authServ, err := auth.NewAuthUserServ(sessionStorage, hashServ, userStorage)
+	if err != nil {
+		panic(fmt.Errorf("NewAuthServ: %v", err))
+	}
+
+	apiGroup := engine.Group("/")
+	userGroup := apiGroup.Group("/")
+	userGroup.Use(middleware.AuthMiddleware(authServ))
+
+	authRouter := api.NewAuthRouter(apiGroup, authServ)
+	_ = authRouter
+
+	tasksRouter := api.NewTasksRouter(userGroup, taskServ)
 	_ = tasksRouter
 
 	engine.Run(fmt.Sprintf(":%d", appCnfg.Port))
