@@ -14,6 +14,7 @@ import (
 	"codeProcessor/internal/services/hasher"
 	"codeProcessor/internal/storage"
 	"fmt"
+	"log"
 
 	_ "codeProcessor/docs"
 
@@ -21,6 +22,12 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
+
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Panicf("%s: %s", msg, err)
+	}
+}
 
 func main() {
 	engine := gin.New()
@@ -32,7 +39,15 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("LoadAppConfig: %v", err))
 	}
+	rabbitMqCnfg, err := cnfg.LoadRabbitMQConfig("./configs/", "rabbitmq", "env")
+	if err != nil {
+		panic(fmt.Errorf("LoadRabbitMQConfig: %v", err))
+	}
 
+	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// defer cancel()
+
+	// Swagger
 	url := ginSwagger.URL(fmt.Sprintf("http://localhost:%d/swagger/doc.json", appCnfg.Port))
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
@@ -42,7 +57,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("NewTaskStorage: %v", err))
 	}
-	taskServ, err := services.NewTaskServ(taskStorage)
+	taskServ, err := services.NewTaskServ(taskStorage, rabbitMqCnfg)
 	if err != nil {
 		panic(fmt.Errorf("NewTaskServ: %v", err))
 	}
@@ -70,6 +85,9 @@ func main() {
 
 	tasksRouter := api.NewTasksRouter(userGroup, taskServ)
 	_ = tasksRouter
+
+	commitRouter := api.NewCommitRouter(apiGroup, taskServ)
+	_ = commitRouter
 
 	engine.Run(fmt.Sprintf(":%d", appCnfg.Port))
 }

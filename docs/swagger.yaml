@@ -1,5 +1,28 @@
 basePath: /
 definitions:
+  jsonrep.TaskJSON:
+    properties:
+      code:
+        type: string
+      compiler_name:
+        type: string
+      id:
+        type: string
+      result:
+        type: string
+      status:
+        type: string
+    type: object
+  jsonrep.TaskRequest:
+    properties:
+      code:
+        type: string
+      translator:
+        type: string
+    required:
+    - code
+    - translator
+    type: object
   jsonrep.UserAuth:
     properties:
       password:
@@ -14,6 +37,43 @@ info:
   title: Code Processor API
   version: "1.0"
 paths:
+  /commit:
+    post:
+      consumes:
+      - application/json
+      description: Update task status and result (used by consumers)
+      parameters:
+      - description: Task result data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/jsonrep.TaskJSON'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Result committed successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input data
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Task not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      tags:
+      - Задачи
   /login:
     post:
       consumes:
@@ -138,6 +198,12 @@ paths:
         name: Authorization
         required: true
         type: string
+      - description: Данные задачи
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/jsonrep.TaskRequest'
       produces:
       - application/json
       responses:

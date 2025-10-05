@@ -2,9 +2,12 @@ package api
 
 import (
 	"codeProcessor/internal/models"
+	jsonrep "codeProcessor/internal/models/jsonRep"
 	"codeProcessor/internal/services"
+	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -33,24 +36,31 @@ func NewTasksRouter(router *gin.RouterGroup, taskServ services.TaskServ) TasksRo
 // @Produce json
 // @Security ApiKeyAuth
 // @Param Authorization header string true "Bearer токен сессии"
-// // @Param request body jsonrep.TaskAdd true "Данные задачи"
+// @Param request body jsonrep.TaskRequest true "Данные задачи"
 // @Success 201 "Задача успешно создана"
 // @Failure 400 "Неверный запрос - ошибка валидации"
 // @Router /task [post]
 func (r *TasksRouter) UploadTask(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	// var req jsonrep.TaskAdd
-	// if err := c.ShouldBindJSON(&req); err != nil {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	// 	return
-	// }
+	var taskReq jsonrep.TaskRequest
+	if err := c.ShouldBindJSON(&taskReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data: " + err.Error()})
+		return
+	}
 
-	task, err := models.NewTask(uuid.New(), models.StatusInProcess, "q", "q", "")
+	task, err := models.NewTask(
+		uuid.New(),
+		models.StatusInProcess,
+		taskReq.Code,
+		taskReq.Translator,
+		"")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	r.taskServ.AddTask(task)
+	r.taskServ.AddTask(ctx, task)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"task_id": task.ID(),

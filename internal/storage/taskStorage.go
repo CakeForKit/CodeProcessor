@@ -10,6 +10,7 @@ import (
 type TaskStorage interface {
 	GetTaskByID(id uuid.UUID) (models.Task, error)
 	AddTask(task models.Task) error
+	UpdateTask(task models.Task) error
 }
 
 func NewTaskStorage() (TaskStorage, error) {
@@ -39,7 +40,12 @@ func (ts *taskStorage) AddTask(task models.Task) error {
 	if _, ok := ts.tasks[task.ID()]; ok {
 		return ErrTaskIDAlreadExist
 	}
-	task.SetStatus(models.StatusReady)
+	// task.SetStatus(models.StatusInProcess)
+	ts.tasks[task.ID()] = task
+	return nil
+}
+
+func (ts *taskStorage) UpdateTask(task models.Task) error {
 	ts.tasks[task.ID()] = task
 	return nil
 }

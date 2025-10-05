@@ -1,5 +1,7 @@
+version: '3.8'
+
 services:
-  code_processor_app: # http сервер
+  code_processor_app:
     container_name: code_processor_app
     build:
       context: ../
@@ -7,7 +9,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - GIN_MODE=debug  
+      - GIN_MODE=debug
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -18,8 +20,8 @@ services:
     image: rabbitmq:3.13-management
     container_name: rabbitmq
     ports:
-      - "5672:5672"   # AMQP protocol
-      - "15672:15672" # Management UI
+      - "5672:5672"
+      - "15672:15672"
     environment:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_DEFAULT_PASS=guest
@@ -31,7 +33,7 @@ services:
     networks:
       - code_processor_network
 
-  code_processor_worker:  # Consumer
+  code_processor_worker:
     container_name: code_processor_worker
     build:
       context: ../
@@ -45,12 +47,25 @@ services:
       code_processor_app:
         condition: service_started
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock  # для запуска Docker контейнеров
-      # - ./processor/workspace:/workspace  # для временных файлов
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - code_processor_network
+
+  tests:
+    container_name: code_processor_tests
+    build:
+      context: ../
+      dockerfile: ./tests/Dockerfile
+    environment:
+      - BASE_URL=http://code_processor_app:8000
+    depends_on:
+      code_processor_app:
+        condition: service_started
+      code_processor_worker:
+        condition: service_started
     networks:
       - code_processor_network
 
 networks:
   code_processor_network:
     driver: bridge
-

@@ -53,14 +53,14 @@ func AuthMiddleware(authServ SessionChecker) gin.HandlerFunc {
 
 		sid, err := uuid.Parse(accessToken)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
 		}
 
 		good := authServ.CheckSession(sid)
 		fmt.Println("CheckSession", good)
 		if !good {
-			c.JSON(http.StatusUnauthorized, gin.H{})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{})
 			return
 		}
 

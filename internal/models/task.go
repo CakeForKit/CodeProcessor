@@ -1,6 +1,7 @@
 package models
 
 import (
+	jsonrep "codeProcessor/internal/models/jsonRep"
 	"errors"
 	"strings"
 
@@ -54,6 +55,16 @@ func (t *Task) Validate() bool {
 		return false
 	}
 	return true
+}
+
+func (t *Task) ToTaskJson() jsonrep.TaskJSON {
+	return jsonrep.TaskJSON{
+		ID:           t.id,
+		Status:       string(t.status),
+		Code:         t.code,
+		CompilerName: t.compilerName,
+		Result:       t.result,
+	}
 }
 
 func (t *Task) ID() uuid.UUID {

@@ -15,6 +15,61 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/commit": {
+            "post": {
+                "description": "Update task status and result (used by consumers)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Задачи"
+                ],
+                "parameters": [
+                    {
+                        "description": "Task result data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/jsonrep.TaskJSON"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Result committed successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input data",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Task not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "description": "Аутентификация пользователя и получение токена",
@@ -213,6 +268,15 @@ const docTemplate = `{
                         "name": "Authorization",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "description": "Данные задачи",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/jsonrep.TaskRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -227,6 +291,41 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "jsonrep.TaskJSON": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "compiler_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "jsonrep.TaskRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "translator"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "translator": {
+                    "type": "string"
+                }
+            }
+        },
         "jsonrep.UserAuth": {
             "type": "object",
             "properties": {
